@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>キーで動画と音楽を再生</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>キーを押して動画と音楽を再生</h1>
+    <p>キーボードの 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's' を押して動画を再生し、'F' キーでフルスクリーンを切り替えてください。</p>
+    <p>'L' キーを押すと、スプレッドシートのA1セルの情報が表示されます。</p>
+
+    <div id="media-container">
+        <video id="videoPlayer" width="640" height="360" controls style="display:none;">
+            <!-- 動画ファイルはここに配置します。例: <source src="video1.mp4" type="video/mp4"> -->
+        </video>
+    </div>
+
+    <div id="spreadsheet-info" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9; display: none;">
+        スプレッドシートA1セルの情報: <span id="a1-value"></span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
