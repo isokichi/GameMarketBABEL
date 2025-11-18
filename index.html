@@ -8,13 +8,26 @@
 </head>
 <body>
     <h1>キーを押して動画と音楽を再生</h1>
-    <p>キーボードの 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's' を押して動画を再生し、'F' キーでフルスクリーンを切り替えてください。</p>
+    <p>キーボードの 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's' を押して動画の待機画面に移動し、スペースキーで再生/停止、'F' キーでフルスクリーンを切り替えてください。</p>
     <p>'L' キーを押すと、スプレッドシートのA1セルの情報が表示されます。</p>
 
     <div id="media-container">
         <video id="videoPlayer" width="640" height="360" controls style="display:none;">
             <!-- 動画ファイルはここに配置します。例: <source src="video1.mp4" type="video/mp4"> -->
         </video>
+        <!-- 各動画の待機画面 -->
+        <div id="waiting-screen-01" class="waiting-screen" style="display:none;"><img src="images/01.png" alt="Waiting Screen 01"></div>
+        <div id="waiting-screen-02" class="waiting-screen" style="display:none;"><img src="images/02.png" alt="Waiting Screen 02"></div>
+        <div id="waiting-screen-03" class="waiting-screen" style="display:none;"><img src="images/03.png" alt="Waiting Screen 03"></div>
+        <div id="waiting-screen-04" class="waiting-screen" style="display:none;"><img src="images/04.png" alt="Waiting Screen 04"></div>
+        <div id="waiting-screen-05" class="waiting-screen" style="display:none;"><img src="images/05.png" alt="Waiting Screen 05"></div>
+        <div id="waiting-screen-06" class="waiting-screen" style="display:none;"><img src="images/06.png" alt="Waiting Screen 06"></div>
+        <div id="waiting-screen-07" class="waiting-screen" style="display:none;"><img src="images/07.png" alt="Waiting Screen 07"></div>
+        <div id="waiting-screen-08" class="waiting-screen" style="display:none;"><img src="images/08.png" alt="Waiting Screen 08"></div>
+        <div id="waiting-screen-09" class="waiting-screen" style="display:none;"><img src="images/09.png" alt="Waiting Screen 09"></div>
+        <div id="waiting-screen-10" class="waiting-screen" style="display:none;"><img src="images/10.png" alt="Waiting Screen 10"></div>
+        <div id="waiting-screen-11" class="waiting-screen" style="display:none;"><img src="images/11.png" alt="Waiting Screen 11"></div>
+        <div id="waiting-screen-12" class="waiting-screen" style="display:none;"><img src="images/12.png" alt="Waiting Screen 12"></div>
     </div>
 
     <div id="spreadsheet-info" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9; display: none;">
