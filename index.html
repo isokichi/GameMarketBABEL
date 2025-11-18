@@ -7,12 +7,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>キーを押して動画と音楽を再生</h1>
-    <p>キーボードの 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's' を押して動画の待機画面に移動し、スペースキーで再生/停止、'F' キーでフルスクリーンを切り替えてください。</p>
-    <p>'L' キーを押すと、スプレッドシートのA1セルの情報が表示されます。</p>
-
     <div id="media-container">
-        <video id="videoPlayer" width="640" height="360" controls style="display:none;">
+        <video id="videoPlayer" controls style="display:none;">
             <!-- 動画ファイルはここに配置します。例: <source src="video1.mp4" type="video/mp4"> -->
         </video>
         <!-- 各動画の待機画面 -->
@@ -28,12 +24,19 @@
         <div id="waiting-screen-10" class="waiting-screen" style="display:none;"><img src="images/10.png" alt="Waiting Screen 10"></div>
         <div id="waiting-screen-11" class="waiting-screen" style="display:none;"><img src="images/11.png" alt="Waiting Screen 11"></div>
         <div id="waiting-screen-12" class="waiting-screen" style="display:none;"><img src="images/12.png" alt="Waiting Screen 12"></div>
-    </div>
 
-    <div id="spreadsheet-info" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9; display: none;">
-        スプレッドシートA1セルの情報: <span id="a1-value"></span>
     </div>
-
+    <div id="result-screen" class="result-screen">
+        <div id="loading-message" class="loading-message">集計中...</div>
+        <div class="chart-container" style="display:none;">
+            <div class="bar-chart">
+                <div class="bar" id="bar-c11">C11: <span></span></div>
+                <div class="bar" id="bar-d11">D11: <span></span></div>
+                <div class="bar" id="bar-e11">E11: <span></span></div>
+                <div class="bar" id="bar-f11">F11: <span></span></div>
+            </div>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,11 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
     const videoPlayer = document.getElementById('videoPlayer');
     const mediaContainer = document.getElementById('media-container');
-    const spreadsheetInfoDiv = document.getElementById('spreadsheet-info');
-    const a1ValueSpan = document.getElementById('a1-value');
+    const resultScreen = document.getElementById('result-screen'); // 結果画面要素を追加
+    const loadingMessage = document.getElementById('loading-message'); // 集計中メッセージ要素を追加
+    const chartContainer = resultScreen.querySelector('.chart-container'); // チャートコンテナ要素を追加
+    const barC11 = document.getElementById('bar-c11'); // C11の棒グラフ要素を追加
+    const barD11 = document.getElementById('bar-d11'); // D11の棒グラフ要素を追加
+    const barE11 = document.getElementById('bar-e11'); // E11の棒グラフ要素を追加
+    const barF11 = document.getElementById('bar-f11'); // F11の棒グラフ要素を追加
 
     // GASウェブアプリのURL (fetch API用)
-    const gasWebAppUrl = 'https://script.google.com/macros/s/AKfycbzkhwOzbSe1VY1po5OT6UObPiyChjZg0lysJrFYLNwFHqxsIvRu4LTq1CM1jwqasAImGQ/exec';
+    const gasWebAppUrl = 'https://script.google.com/macros/s/AKfycby9AMrzGPcm3QBhWn2oBdCg6x76yBK4nvi-qhJP9dPvWy5Xpl0y70-aqgb95vm-o9bn4A/exec';
+
+    // 棒グラフを更新する関数
+    function updateBarChart(data) {
+        const maxValue = Math.max(data.c11, data.d11, data.e11, data.f11, 1); // 最小値を1として、0除算を避ける
+
+        const setBarHeight = (barElement, value) => {
+            const percentage = (value / maxValue) * 100;
+            barElement.style.height = `${percentage}%`;
+            barElement.querySelector('span').textContent = value;
+        };
+
+        setBarHeight(barC11, data.c11);
+        setBarHeight(barD11, data.d11);
+        setBarHeight(barE11, data.e11);
+        setBarHeight(barF11, data.f11);
+    }
 
     // メディアファイルのパスを定義します。
     const videoSources = {
@@ -52,6 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.values(waitingScreens).forEach(screen => {
                 if (screen) screen.style.display = 'none';
             });
+            // 結果発表画面も非表示にする
+            if (resultScreen) {
+                resultScreen.style.display = 'none';
+                loadingMessage.style.display = 'none';
+                chartContainer.style.display = 'none';
+            }
+            mediaContainer.style.display = 'flex'; // media-containerを表示
             currentVideoKey = null;
         };
 
@@ -73,30 +101,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.exitFullscreen();
             }
             console.log(`フルスクリーンモードを切り替えました。`);
-        } else if (key === 'l') { // 'L' キーでスプレッドシートのA1セルの情報を表示 (fetch APIを使用)
-            spreadsheetInfoDiv.style.display = 'block';
-            a1ValueSpan.textContent = '読み込み中...';
+        } else if (key === 'l') { // 'L' キーで結果画面の表示/非表示を切り替え、データを取得してグラフを更新
+            console.log("Lキーが押されました。");
+            if (resultScreen) {
+                console.log("resultScreen要素が見つかりました。現在のdisplay:", resultScreen.style.display);
+                if (resultScreen.style.display === 'none' || resultScreen.style.display === '') { // 初期状態が空の場合も考慮
+                    mediaContainer.style.display = 'none'; // media-containerを非表示
+                    resultScreen.style.display = 'flex';
+                    loadingMessage.style.display = 'block'; // 集計中メッセージを表示
+                    chartContainer.style.display = 'none'; // グラフを非表示
+                    console.log("resultScreenをflexに設定し、集計中メッセージを表示しました。");
 
-            fetch(gasWebAppUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        a1ValueSpan.textContent = `エラー: ${data.error}`;
-                        console.error(`スプレッドシートA1セルの読み込みに失敗しました: ${data.error}`);
-                    } else {
-                        a1ValueSpan.textContent = data.a1Value;
-                        console.log(`スプレッドシートA1セルの情報: ${data.a1Value}`);
-                    }
-                })
-                .catch(error => {
-                    a1ValueSpan.textContent = `通信エラー: ${error.message}`;
-                    console.error(`スプレッドシートA1セルの読み込み中に通信エラーが発生しました: ${error.message}`);
-                });
+                    // スプレッドシートのC11, D11, E11, F11の値をGASから取得
+                    fetch(`${gasWebAppUrl}?action=getChartData`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            loadingMessage.style.display = 'none'; // 集計中メッセージを非表示
+                            chartContainer.style.display = 'block'; // グラフを表示
+                            if (data.error) {
+                                console.error(`チャートデータの読み込みに失敗しました: ${data.error}`);
+                                // エラー表示を棒グラフの代わりに表示することも可能
+                            } else {
+                                updateBarChart(data);
+                                console.log('チャートデータを更新しました:', data);
+                            }
+                        })
+                        .catch(error => {
+                            loadingMessage.style.display = 'none'; // エラー時も集計中メッセージを非表示
+                            console.error(`チャートデータの読み込み中に通信エラーが発生しました: ${error.message}`);
+                        });
+                } else {
+                    resultScreen.style.display = 'none';
+                    loadingMessage.style.display = 'none'; // 閉じる際も非表示
+                    chartContainer.style.display = 'none'; // 閉じる際も非表示
+                    mediaContainer.style.display = 'flex'; // media-containerを表示
+                    console.log("resultScreenをnoneに設定しました。");
+                }
+            } else {
+                console.error("resultScreen要素が見つかりませんでした。");
+            }
         } else if (key === ' ') { // スペースキーで再生/停止を切り替える
             if (currentVideoKey && waitingScreens[currentVideoKey] && waitingScreens[currentVideoKey].style.display === 'flex') {
                 // 待機画面が表示されている場合、動画を再生
