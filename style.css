@@ -56,6 +56,17 @@ video, audio {
     object-fit: contain; /* 画像がアスペクト比を維持しつつコンテナに収まるように */
 }
 
+#initial-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#initial-screen img {
+    display: block; /* imgをブロック要素にする */
+    margin: auto; /* 中央寄せ */
+}
+
 .result-screen {
     position: fixed; /* 画面全体を覆う */
     top: 0;

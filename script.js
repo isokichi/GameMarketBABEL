@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const videoPlayer = document.getElementById('videoPlayer');
+    const bgmPlayer = document.getElementById('bgmPlayer'); // BGMプレイヤー要素を追加
     const mediaContainer = document.getElementById('media-container');
+    const initialScreen = document.getElementById('initial-screen'); // 初期画面要素を追加
     const resultScreen = document.getElementById('result-screen'); // 結果画面要素を追加
     const loadingMessage = document.getElementById('loading-message'); // 集計中メッセージ要素を追加
     const chartContainer = resultScreen.querySelector('.chart-container'); // チャートコンテナ要素を追加
@@ -61,35 +63,62 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let currentVideoKey = null; // 現在ロードされている動画のキーを追跡
+    let isBgmPlayedInitially = false; // BGMが最初に再生されたかどうかを追跡するフラグ
+
+    // すべてのメディアと待機画面を停止し、非表示にするヘルパー関数
+    const stopAllMediaAndScreens = () => {
+        videoPlayer.pause();
+        videoPlayer.currentTime = 0;
+        videoPlayer.style.display = 'none';
+        Object.values(waitingScreens).forEach(screen => {
+            if (screen) screen.style.display = 'none';
+        });
+        if (initialScreen) {
+            initialScreen.style.display = 'none'; // 初期画面も非表示にする
+        }
+        // 結果発表画面も非表示にする
+        if (resultScreen) {
+            resultScreen.style.display = 'none';
+            loadingMessage.style.display = 'none';
+            chartContainer.style.display = 'none';
+        }
+        mediaContainer.style.display = 'flex'; // media-containerを表示
+        currentVideoKey = null;
+        if (bgmPlayer) {
+            bgmPlayer.currentTime = 0; // BGMを最初から再生
+            bgmPlayer.play().catch(e => console.error("BGMの再生に失敗しました:", e)); // BGMを再開
+        }
+    };
+
+    // 動画再生終了時のイベントリスナー
+    videoPlayer.addEventListener('ended', () => {
+        console.log('動画再生が終了しました。初期画面に戻ります。');
+        stopAllMediaAndScreens(); // すべてのメディアと画面を停止・非表示
+        if (initialScreen) {
+            initialScreen.style.display = 'block'; // 初期画面を表示
+        }
+    });
 
     document.addEventListener('keydown', (event) => {
-        const key = event.key.toLowerCase(); // 小文字に変換してキーを比較
+        // 最初のキー入力でBGMを再生
+        if (!isBgmPlayedInitially && bgmPlayer) {
+            bgmPlayer.play().then(() => {
+                isBgmPlayedInitially = true;
+                console.log("最初のユーザー操作でBGMを再生しました。");
+            }).catch(e => console.error("最初のBGM再生に失敗しました:", e));
+        }
 
-        // すべてのメディアと待機画面を停止し、非表示にするヘルパー関数
-        const stopAllMediaAndScreens = () => {
-            videoPlayer.pause();
-            videoPlayer.currentTime = 0;
-            videoPlayer.style.display = 'none';
-            Object.values(waitingScreens).forEach(screen => {
-                if (screen) screen.style.display = 'none';
-            });
-            // 結果発表画面も非表示にする
-            if (resultScreen) {
-                resultScreen.style.display = 'none';
-                loadingMessage.style.display = 'none';
-                chartContainer.style.display = 'none';
-            }
-            mediaContainer.style.display = 'flex'; // media-containerを表示
-            currentVideoKey = null;
-        };
+        const key = event.key.toLowerCase(); // 小文字に変換してキーを比較
 
         if (videoSources[key]) {
             stopAllMediaAndScreens(); // すべてをリセット
             currentVideoKey = key;
             videoPlayer.src = videoSources[key];
-            // videoPlayer.style.display = 'none'; // 動画プレイヤーは非表示のまま
             if (waitingScreens[key]) {
                 waitingScreens[key].style.display = 'flex'; // 対応する待機画面を表示
+            }
+            if (bgmPlayer) {
+                bgmPlayer.pause(); // 動画再生中はBGMを一時停止
             }
             console.log(`動画をロード: ${videoSources[key]}。待機画面を表示中。スペースキーで再生/停止。`);
         } else if (key === 'f') { // 'F' キーでフルスクリーンを切り替える
@@ -111,6 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadingMessage.style.display = 'block'; // 集計中メッセージを表示
                     chartContainer.style.display = 'none'; // グラフを非表示
                     console.log("resultScreenをflexに設定し、集計中メッセージを表示しました。");
+
+                    if (bgmPlayer) {
+                        bgmPlayer.pause(); // 結果画面表示中はBGMを一時停止
+                    }
 
                     // スプレッドシートのC11, D11, E11, F11の値をGASから取得
                     fetch(`${gasWebAppUrl}?action=getChartData`)
@@ -140,6 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadingMessage.style.display = 'none'; // 閉じる際も非表示
                     chartContainer.style.display = 'none'; // 閉じる際も非表示
                     mediaContainer.style.display = 'flex'; // media-containerを表示
+                    if (bgmPlayer) {
+                        bgmPlayer.play().catch(e => console.error("BGMの再生に失敗しました:", e)); // BGMを再開
+                    }
                     console.log("resultScreenをnoneに設定しました。");
                 }
             } else {
@@ -151,13 +187,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 waitingScreens[currentVideoKey].style.display = 'none'; // 待機画面を非表示
                 videoPlayer.style.display = 'block'; // 動画プレイヤーを表示
                 videoPlayer.play();
+                if (bgmPlayer) {
+                    bgmPlayer.pause(); // 動画再生中はBGMを一時停止
+                }
                 console.log('動画を再生しました。');
             } else if (videoPlayer.style.display === 'block') { // 動画が再生中の場合、一時停止
                 if (videoPlayer.paused) {
                     videoPlayer.play();
+                    if (bgmPlayer) {
+                        bgmPlayer.pause(); // 動画再生中はBGMを一時停止
+                    }
                     console.log('動画を再生しました。');
                 } else {
                     videoPlayer.pause();
+                    if (bgmPlayer) {
+                        bgmPlayer.play().catch(e => console.error("BGMの再生に失敗しました:", e)); // 動画一時停止中はBGMを再開
+                    }
                     console.log('動画を一時停止しました。');
                 }
             }
@@ -165,4 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`キー '${event.key}' に対応するメディアはありません。`);
         }
     });
+
+    // ページロード時に初期画面を表示
+    if (initialScreen) {
+        initialScreen.style.display = 'block';
+        // if (bgmPlayer) {
+        //     bgmPlayer.play().catch(e => console.error("BGMの再生に失敗しました:", e)); // 初期画面でBGMを再生
+        // }
+    }
 });
