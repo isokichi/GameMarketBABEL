@@ -3,7 +3,9 @@ import GraphScreen from '@/components/GraphScreen'; // 既存のGraphScreenを�
 import type { TeamData } from '@/App'; // TeamData型をインポート
 
 // GASウェブアプリのURL (fetch API用)
-const gasWebAppUrl = 'https://script.google.com/macros/s/AKfycby9AMrzGPcm3QBhWn2oBdCg6x76yBK4nvi-qhJP9dPvWy5Xpl0y70-aqgb95vm-o9bn4A/exec';
+// GASウェブアプリのURL (fetch API用)
+// App.tsxと統一するために変更
+const gasWebAppUrl = 'https://script.google.com/macros/s/AKfycbwt6Ga3QDhCikbJadAyKpT17HcOAgrw-eN6WyXE9dRsPWkQSP6LDdN20pHN_1xa1XjK/exec';
 
 interface ResultScreenContainerProps {
     currentScreen: 'initial' | 'media' | 'result';
@@ -36,6 +38,7 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
                     return response.json();
                 })
                 .then(data => {
+                    console.log("GASからのチャートデータレスポンス:", data); // 追加
                     if (data.error) {
                         console.error(`チャートデータの読み込みに失敗しました: ${data.error}`);
                         setError(`データの読み込みに失敗しました: ${data.error}`);
@@ -84,7 +87,7 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
     return (
         <div id="result-screen" className="result-screen" style={{ display: 'flex' }}>
             {/* resultBGMプレイヤーを追加 */}
-            <audio ref={resultBgmPlayerRef} src="/audio/resultBGM.wav" loop></audio> {/* 追記 */}
+            <audio ref={resultBgmPlayerRef} src="/audio/resultBGM.mp3" loop></audio> {/* 追記 */}
             {loading && <div id="loading-message" className="loading-message">集計中...</div>}
             {error && !loading && <div className="error-message" style={{ color: 'red', fontSize: '1.5em' }}>{error}</div>}
             {!loading && !error && chartData.length > 0 && (
