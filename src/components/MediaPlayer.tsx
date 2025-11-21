@@ -2,34 +2,34 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 
 // 動画ソースのマッピング (App.tsxから移植)
 const videoSources: Record<string, string> = {
-    'q': '/videos/01.mp4',
-    'w': '/videos/02.mp4',
-    'e': '/videos/03.mp4',
-    'r': '/videos/04.mp4',
-    't': '/videos/05.mp4',
-    'y': '/videos/06.mp4',
-    'u': '/videos/07.mp4',
-    'i': '/videos/08.mp4',
-    'o': '/videos/09.mp4',
-    'p': '/videos/10.mp4',
-    'a': '/videos/11.mp4',
-    's': '/videos/12.mp4'
+    'q': '/videos/Tr01.mp4',
+    'w': '/videos/Tr02.mp4',
+    'e': '/videos/Tr03.mp4',
+    'r': '/videos/Tr04.mp4',
+    't': '/videos/Tr05.mp4',
+    'y': '/videos/Tr06.mp4',
+    'u': '/videos/Tr07.mp4',
+    'i': '/videos/Tr08.mp4',
+    'o': '/videos/Tr09.mp4',
+    'p': '/videos/Tr10.mp4',
+    'a': '/videos/Tr11.mp4',
+    's': '/videos/Tr12.mp4'
 };
 
 // 待機画面画像のパス
 const waitingImageSources: Record<string, string> = {
-    'q': '/images/01.png',
-    'w': '/images/02.png',
-    'e': '/images/03.png',
-    'r': '/images/04.png',
-    't': '/images/05.png',
-    'y': '/images/06.png',
-    'u': '/images/07.png',
-    'i': '/images/08.png',
-    'o': '/images/09.png',
-    'p': '/images/10.png',
-    'a': '/images/11.png',
-    's': '/images/12.png'
+    'q': '/images/scoreboard01.png',
+    'w': '/images/scoreboard02.png',
+    'e': '/images/scoreboard03.png',
+    'r': '/images/scoreboard04.png',
+    't': '/images/scoreboard05.png',
+    'y': '/images/scoreboard06.png',
+    'u': '/images/scoreboard07.png',
+    'i': '/images/scoreboard08.png',
+    'o': '/images/scoreboard09.png',
+    'p': '/images/scoreboard10.png',
+    'a': '/images/scoreboard11.png',
+    's': '/images/scoreboard12.png'
 };
 
 interface MediaPlayerProps {
@@ -147,7 +147,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, 
     return (
         <div id="media-container" style={{ display: currentScreen === 'media' ? 'flex' : 'none' }}>
             <video id="videoPlayer" ref={videoPlayerRef} controls={false} style={{ display: (isVideoPlaying || showWaitingScreen) ? 'block' : 'none' }}></video>
-            <audio id="bgmPlayer" ref={bgmPlayerRef} src="/audio/BGM.mp3" loop></audio>
+            <audio id="bgmPlayer" ref={bgmPlayerRef} src="/audio/BGM.wav" loop></audio>
 
             {/* 各動画の待機画面 */}
             {currentVideoKey && showWaitingScreen && waitingImageSources[currentVideoKey] && (

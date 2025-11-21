@@ -88,6 +88,7 @@ const App: React.FC = () => {
       <ResultScreenContainer
         currentScreen={currentScreen}
         onBackToInitial={() => setCurrentScreen('initial')} // 結果画面から戻る機能が必要な場合
+        onBgmPlayToggle={handleBgmPlayToggle}
       />
     </>
   );
