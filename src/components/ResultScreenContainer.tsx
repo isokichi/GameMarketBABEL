@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import GraphScreen from '@/components/GraphScreen'; // 既存のGraphScreenをインポート
 import type { TeamData } from '@/App'; // TeamData型をインポート
 
@@ -8,15 +8,24 @@ const gasWebAppUrl = 'https://script.google.com/macros/s/AKfycby9AMrzGPcm3QBhWn2
 interface ResultScreenContainerProps {
     currentScreen: 'initial' | 'media' | 'result';
     onBackToInitial: () => void;
+    onBgmPlayToggle: (play: boolean) => void; // 新しく追加
 }
 
-const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentScreen }) => {
+const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentScreen, onBgmPlayToggle }) => { // onBgmPlayToggleを受け取る
     const [loading, setLoading] = useState(true);
     const [chartData, setChartData] = useState<TeamData[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const resultBgmPlayerRef = useRef<HTMLAudioElement>(null); // resultBGMの参照
 
     useEffect(() => {
         if (currentScreen === 'result') {
+            // 結果画面BGMの再生
+            if (resultBgmPlayerRef.current) {
+                resultBgmPlayerRef.current.currentTime = 0; // 最初から再生
+                resultBgmPlayerRef.current.play().catch((e: unknown) => console.error("結果BGMの再生に失敗しました:", e));
+            }
+            onBgmPlayToggle(false); // メインBGMを一時停止
+
             setLoading(true);
             setError(null);
             fetch(`${gasWebAppUrl}?action=getChartData`)
@@ -51,8 +60,22 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
                 .finally(() => {
                     setLoading(false);
                 });
+        } else {
+            // 結果画面ではない場合、結果BGMを停止
+            if (resultBgmPlayerRef.current) {
+                resultBgmPlayerRef.current.pause();
+                resultBgmPlayerRef.current.currentTime = 0;
+            }
         }
-    }, [currentScreen]);
+
+        // クリーンアップ関数
+        return () => {
+            if (resultBgmPlayerRef.current) {
+                resultBgmPlayerRef.current.pause();
+                resultBgmPlayerRef.current.currentTime = 0;
+            }
+        };
+    }, [currentScreen, onBgmPlayToggle]); // onBgmPlayToggleを依存配列に追加
 
     if (currentScreen !== 'result') {
         return null; // 結果画面ではない場合は何も表示しない
@@ -60,6 +83,8 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
 
     return (
         <div id="result-screen" className="result-screen" style={{ display: 'flex' }}>
+            {/* resultBGMプレイヤーを追加 */}
+            <audio ref={resultBgmPlayerRef} src="/audio/resultBGM.wav" loop></audio> {/* 追記 */}
             {loading && <div id="loading-message" className="loading-message">集計中...</div>}
             {error && !loading && <div className="error-message" style={{ color: 'red', fontSize: '1.5em' }}>{error}</div>}
             {!loading && !error && chartData.length > 0 && (
