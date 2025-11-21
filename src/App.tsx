@@ -43,6 +43,8 @@ const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<'initial' | 'media' | 'result'>('initial'); // 'waiting'スクリーンを削除
   const [isBgmPlaying, setIsBgmPlaying] = useState(false);
   const [bonusNumbers, setBonusNumbers] = useState<number[]>([]); // ボーナスカードの数字を保持するステート
+  const [isInitialBgmPlayed, setIsInitialBgmPlayed] = useState(false); // App.tsxで管理
+  const [videoKeyToLoad, setVideoKeyToLoad] = useState<string | null>(null); // MediaPlayerに渡す動画キー
 
   // BGMの再生/一時停止を切り替えるコールバック
   const handleBgmPlayToggle = useCallback((play: boolean) => {
@@ -52,45 +54,60 @@ const App: React.FC = () => {
   // 動画終了時に初期画面に戻るコールバック
   const handleVideoEnded = useCallback(() => {
     setCurrentScreen('initial');
-  }, []);
+    setVideoKeyToLoad(null); // 動画終了でキーをリセット
+    handleBgmPlayToggle(true); // 動画終了でBGM再開
+  }, [handleBgmPlayToggle]);
+
+  // GAS連携とボーナスデータ設定、Media画面への遷移を行う関数
+  const fetchBonusAndTransitionToMedia = useCallback(async (key: string) => { // キーを受け取る
+    console.log(`App.tsx: ボーナス取得を開始します。`);
+    // handleBgmPlayToggle(false); // Media画面に入る前にメインBGMを停止 (ボーナス読み込み中はBGMを止めない)
+    try {
+      const response = await fetch(`${GAS_URL}?action=getNextBonus`);
+      const data = await response.json();
+
+      if (data.error) {
+        console.error("GASからのエラー:", data.error);
+        throw new Error(data.error);
+      } else {
+        console.log("App.tsx: GASから取得したボーナスデータ:", data);
+        const { b19, c19, d19, e19 } = data;
+        setBonusNumbers([b19, c19, d19, e19]);
+        setVideoKeyToLoad(key); // 押されたキーを保存
+        setCurrentScreen('media'); // Media画面に切り替え
+      }
+    } catch (error) {
+      console.error("App.tsx: GASからのデータ取得中にエラーが発生しました:", error);
+      setCurrentScreen('initial'); // エラー時はinitialに戻る
+      setVideoKeyToLoad(null); // エラー時はキーをリセット
+      handleBgmPlayToggle(true); // エラー時はinitialに戻るのでBGMを再開
+    }
+  }, [handleBgmPlayToggle, setBonusNumbers, setCurrentScreen, setVideoKeyToLoad]); // 依存配列にsetVideoKeyToLoadを追加
 
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
 
+      // 最初のキー入力でBGMを再生
+      if (!isInitialBgmPlayed) {
+        handleBgmPlayToggle(true);
+        setIsInitialBgmPlayed(true);
+        console.log("App.tsx: 最初のユーザー操作でBGMを再生しました。");
+      }
+
       if (key === 'l') {
-        // Lキーで結果画面をトグル
         setCurrentScreen(prevScreen => {
           if (prevScreen === 'result') {
             handleBgmPlayToggle(true); // 結果画面を閉じたらBGM再開
+            setVideoKeyToLoad(null); // 結果画面を閉じたらキーをリセット
             return 'initial';
           } else {
             handleBgmPlayToggle(false); // 結果画面を開いたらBGM一時停止
             return 'result';
           }
         });
-      } else if (videoKeyMap[key]) {
-        // 動画キーが押されたら待機画面を維持しつつボーナスデータを取得
-        // Media画面への切り替えはスペースキーで行う
-        console.log(`ボーナス取得キー '${key}' が押されました。`);
-        fetch(`${GAS_URL}?action=getNextBonus`)
-          .then(response => response.json())
-          .then(data => {
-            if (data.error) {
-              console.error("GASからのエラー:", data.error);
-            } else {
-              console.log("GASから取得したボーナスデータ:", data);
-              const { b19, c19, d19, e19 } = data;
-              console.log("B19:", b19, "C19:", c19, "D19:", d19, "E19:", e19); // 個々の値をログ出力
-              setBonusNumbers([b19, c19, d19, e19]); // ボーナス数字をステートに保存
-              setCurrentScreen('media'); // メディア画面に切り替え
-            }
-          })
-          .catch(error => {
-            console.error("GASからのデータ取得中にエラーが発生しました:", error);
-            // エラーが発生した場合も、ロゴ画面に留まる
-            setCurrentScreen('initial');
-          });
+      } else if (videoKeyMap[key]) { // どの画面からでも動画キーを処理できるように変更
+        fetchBonusAndTransitionToMedia(key); // 押されたキーを渡す
       }
       // Fキー (フルスクリーン) とスペースキー (動画再生/一時停止) はMediaPlayerで処理される
     };
@@ -99,11 +116,14 @@ const App: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [handleBgmPlayToggle]); // handleBgmPlayToggleは useCallback でメモ化されているので依存配列に入れても問題ない
+  }, [handleBgmPlayToggle, isInitialBgmPlayed, currentScreen, fetchBonusAndTransitionToMedia, setVideoKeyToLoad]); // 依存配列にsetVideoKeyToLoadを追加
 
   return (
     <>
-      <InitialScreen currentScreen={currentScreen} />
+      <InitialScreen 
+        currentScreen={currentScreen} 
+        showStartMessage={!isInitialBgmPlayed && currentScreen === 'initial'} // initial画面でまだBGMが再生されていなければメッセージを表示
+      />
       <MediaPlayer
         onVideoEnded={handleVideoEnded}
         currentScreen={currentScreen}
@@ -111,6 +131,7 @@ const App: React.FC = () => {
         onBgmPlayToggle={handleBgmPlayToggle}
         bonusNumbers={bonusNumbers} // bonusNumbersをMediaPlayerに渡す
         setBonusNumbers={setBonusNumbers} // setBonusNumbersもMediaPlayerに渡す
+        initialVideoKey={videoKeyToLoad} // MediaPlayerに動画キーを渡す
       />
       <ResultScreenContainer
         currentScreen={currentScreen}
