@@ -1,45 +1,13 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>キーで動画と音楽を再生</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="media-container">
-        <video id="videoPlayer" controls style="display:none;">
-            <!-- 動画ファイルはここに配置します。例: <source src="video1.mp4" type="video/mp4"> -->
-        </video>
-        <audio id="bgmPlayer" src="audio/BGM.mp3" loop autoplay></audio>
-        <!-- 初期画面 -->
-        <div id="initial-screen" class="waiting-screen" style="display:block;"><img src="images/BABEL_visual_RGB.png" alt="Initial Screen"></div>
-        <!-- 各動画の待機画面 -->
-        <div id="waiting-screen-01" class="waiting-screen" style="display:none;"><img src="images/01.png" alt="Waiting Screen 01"></div>
-        <div id="waiting-screen-02" class="waiting-screen" style="display:none;"><img src="images/02.png" alt="Waiting Screen 02"></div>
-        <div id="waiting-screen-03" class="waiting-screen" style="display:none;"><img src="images/03.png" alt="Waiting Screen 03"></div>
-        <div id="waiting-screen-04" class="waiting-screen" style="display:none;"><img src="images/04.png" alt="Waiting Screen 04"></div>
-        <div id="waiting-screen-05" class="waiting-screen" style="display:none;"><img src="images/05.png" alt="Waiting Screen 05"></div>
-        <div id="waiting-screen-06" class="waiting-screen" style="display:none;"><img src="images/06.png" alt="Waiting Screen 06"></div>
-        <div id="waiting-screen-07" class="waiting-screen" style="display:none;"><img src="images/07.png" alt="Waiting Screen 07"></div>
-        <div id="waiting-screen-08" class="waiting-screen" style="display:none;"><img src="images/08.png" alt="Waiting Screen 08"></div>
-        <div id="waiting-screen-09" class="waiting-screen" style="display:none;"><img src="images/09.png" alt="Waiting Screen 09"></div>
-        <div id="waiting-screen-10" class="waiting-screen" style="display:none;"><img src="images/10.png" alt="Waiting Screen 10"></div>
-        <div id="waiting-screen-11" class="waiting-screen" style="display:none;"><img src="images/11.png" alt="Waiting Screen 11"></div>
-        <div id="waiting-screen-12" class="waiting-screen" style="display:none;"><img src="images/12.png" alt="Waiting Screen 12"></div>
-
-    </div>
-    <div id="result-screen" class="result-screen">
-        <div id="loading-message" class="loading-message">集計中...</div>
-        <div class="chart-container" style="display:none;">
-            <div class="bar-chart">
-                <div class="bar" id="bar-c11">C11: <span></span></div>
-                <div class="bar" id="bar-d11">D11: <span></span></div>
-                <div class="bar" id="bar-e11">E11: <span></span></div>
-                <div class="bar" id="bar-f11">F11: <span></span></div>
-            </div>
-        </div>
-    </div>
-    <script src="script.js"></script>
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>score-bar-app</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
