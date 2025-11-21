@@ -2,18 +2,18 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 
 // 動画ソースのマッピング (App.tsxから移植)
 const videoSources: Record<string, string> = {
-    'q': '/videos/01.mp4',
-    'w': '/videos/02.mp4',
-    'e': '/videos/03.mp4',
-    'r': '/videos/04.mp4',
-    't': '/videos/05.mp4',
-    'y': '/videos/06.mp4',
-    'u': '/videos/07.mp4',
-    'i': '/videos/08.mp4',
-    'o': '/videos/09.mp4',
-    'p': '/videos/10.mp4',
-    'a': '/videos/11.mp4',
-    's': '/videos/12.mp4'
+    'q': '/videos/Tr01.mp4',
+    'w': '/videos/Tr02.mp4',
+    'e': '/videos/Tr03.mp4',
+    'r': '/videos/Tr04.mp4',
+    't': '/videos/Tr05.mp4',
+    'y': '/videos/Tr06.mp4',
+    'u': '/videos/Tr07.mp4',
+    'i': '/videos/Tr08.mp4',
+    'o': '/videos/Tr09.mp4',
+    'p': '/videos/Tr10.mp4',
+    'a': '/videos/Tr11.mp4',
+    's': '/videos/Tr12.mp4'
 };
 
 // 待機画面画像のパス
