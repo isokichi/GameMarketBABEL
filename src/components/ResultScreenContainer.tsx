@@ -63,10 +63,7 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
             {loading && <div id="loading-message" className="loading-message">集計中...</div>}
             {error && !loading && <div className="error-message" style={{ color: 'red', fontSize: '1.5em' }}>{error}</div>}
             {!loading && !error && chartData.length > 0 && (
-                <div className="chart-container" style={{ display: 'block' }}>
-                    {/* GraphScreenにTeamDataを渡す */}
-                    <GraphScreen data={chartData} />
-                </div>
+                <GraphScreen data={chartData} />
             )}
             {/* エラーがなくデータもない場合、データなしメッセージなどを表示することも可能 */}
             {!loading && !error && chartData.length === 0 && (
