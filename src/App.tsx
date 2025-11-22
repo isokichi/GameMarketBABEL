@@ -137,25 +137,24 @@ const App: React.FC = () => {
   // BGMソースと画面の状態に基づいてBGMの再生を制御する
   useEffect(() => {
     if (currentScreen === 'initial') {
-      // メイン画面に来たらメインBGMを再生
-      setCurrentBgmSource('/audio/BGM.wav');
-      // 初回操作後の場合のみBGMを再生
-      setIsBgmPlaying(isInitialBgmPlayed);
+      // Initial画面で、かつBGMソースがメインBGMで、かつ初回操作後の場合のみBGMを再生
+      setIsBgmPlaying(currentBgmSource === '/audio/BGM.wav' && isInitialBgmPlayed);
     } else if (currentScreen === 'media') {
-      // 動画開始前の待機画面 (videoKeyToLoadが存在する)
-      if (videoKeyToLoad !== null) {
-        setCurrentBgmSource('/audio/BGM.wav'); // メインBGM
-        setIsBgmPlaying(true);
-      } else {
-        // 動画終了後の待機画面 (videoKeyToLoadがnull)
-        setCurrentBgmSource('/audio/resultBGM.mp3'); // 結果発表BGM
-        setIsBgmPlaying(true);
-      }
+      // Media画面（待機中または動画終了後）
+      // videoKeyToLoadが存在する場合（動画開始前の待機画面）はメインBGMを再生
+      // videoKeyToLoadがnullの場合（動画終了後の待機画面）は結果発表BGMを再生
+      setIsBgmPlaying(
+        (videoKeyToLoad !== null && currentBgmSource === '/audio/BGM.wav') ||
+        (videoKeyToLoad === null && currentBgmSource === '/audio/resultBGM.mp3')
+      );
     } else if (currentScreen === 'result') {
       // 結果発表画面ではBGMを停止（ResultScreenContainerが自身のBGMを管理）
       setIsBgmPlaying(false);
+    } else {
+      // その他の場合はBGMを停止
+      setIsBgmPlaying(false);
     }
-  }, [currentScreen, isInitialBgmPlayed, videoKeyToLoad, setCurrentBgmSource, setIsBgmPlaying]); // 依存配列を調整
+  }, [currentScreen, currentBgmSource, isInitialBgmPlayed, videoKeyToLoad]); // 依存配列を調整 (setCurrentBgmSourceは削除)
 
 
   return (
