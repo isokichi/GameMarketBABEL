@@ -8,7 +8,14 @@ import ResultScreenContainer from "@/components/ResultScreenContainer";
 export type TeamData = {
   id: string;
   label: string;
+  // GraphScreenで表示する現在のスコア
   score: number;
+  // GASから取得する詳細データ
+  baseScore: number;
+  songBonusAchieved: boolean;
+  variableBonusesAchieved: boolean[]; // 4つの真偽値
+  danceBonusAchieved: boolean;
+  finalScore: number; // GASから取得する最終合計点
 };
 
 // --- 定数・設定 ---
@@ -26,8 +33,13 @@ export const FONT_FAMILY = "Arial, Helvetica, sans-serif";
 export const HIGHLIGHT_COLOR = "#FFD700"; // ゴールド
 export const NORMAL_COLOR = "#535353";
 
+// ボーナススコアの定数
+export const SONG_BONUS_SCORE = 20;
+export const VARIABLE_BONUS_SCORE = 10;
+export const DANCE_BONUS_SCORE = 10;
+
 // GASのデプロイURL
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwt6Ga3QDhCikbJadAyKpT17HcOAgrw-eN6WyXE9dRsPWkQSP6LDdN20pHN_1xa1XjK/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzDDF6g1NMXEYpOi7VsSQQNaBf_LEfW56Pu-0opeVH5H7npWi8I6BbvkgQQRV1Qn4-Srw/exec";
 
 // 動画再生キーマップ
 const videoKeyMap: Record<string, boolean> = {
