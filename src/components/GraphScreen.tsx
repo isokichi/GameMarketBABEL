@@ -2,17 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Stage, Layer, Rect } from "react-konva";
 import useImage from "use-image";
 import bgImageSrc from "@/assets/result_bg.webp";
-import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH, type TeamData } from "@/App";
+// ボーナススコア定数をインポート
+import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH, type TeamData, SONG_BONUS_SCORE, VARIABLE_BONUS_SCORE, DANCE_BONUS_SCORE } from "@/App";
 import ScoreRow from "@/components/ScoreRow";
 
 const GraphScreen: React.FC<{
   data: TeamData[];
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 }> = ({ data }) => {
-  const maxScore = Math.max(...data.map((d) => d.score));
+  const maxScore = Math.max(...data.map((d) => d.finalScore)); // maxScoreは最終スコアから計算
   const [bgImg] = useImage(bgImageSrc, "anonymous");
 
-  const [startAnimation, setStartAnimation] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0); // 0: 初期表示 (素点のみ), 1: 曲ボーナス加算, 2: 可変ボーナス加算, 3: ダンスボーナス加算, 4: 最終合計
+  const totalSteps = 4; // 素点、曲ボーナス、可変ボーナス、ダンスボーナス、最終の5段階 (0-4)
 
   const [dimensions, setDimensions] = useState({
     width: VIRTUAL_WIDTH,
@@ -23,7 +24,7 @@ const GraphScreen: React.FC<{
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Enter") {
-        setStartAnimation(true);
+        setCurrentStep((prevStep) => Math.min(prevStep + 1, totalSteps)); // ステップを進める
       }
     };
 
@@ -31,7 +32,7 @@ const GraphScreen: React.FC<{
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, []); // totalStepsは定数なので依存配列から削除
 
   useEffect(() => {
     const handleResize = () => {
@@ -90,17 +91,36 @@ const GraphScreen: React.FC<{
               y: VIRTUAL_HEIGHT / (bgImg?.height || 1),
             }}
           />
-          {data.map((item, index) => (
+          {data.map((item, index) => {
+            let displayedScore = 0; // 初期値を0にする
+
+            // 各ステップで加算されるボーナスを判断
+            if (currentStep >= 1 && item.songBonusAchieved) {
+                displayedScore += SONG_BONUS_SCORE; // 1回目で曲ボーナス
+            }
+            if (currentStep >= 2) { // 2回目で可変ボーナス
+                displayedScore += item.variableBonusesAchieved.filter(b => b).length * VARIABLE_BONUS_SCORE;
+            }
+            if (currentStep >= 3 && item.danceBonusAchieved) {
+                displayedScore += DANCE_BONUS_SCORE; // 3回目でダンスボーナス
+            }
+            if (currentStep >= 4) { // 4回目で素点 (totalStepsは4なので、currentStepが4の時に実行)
+                displayedScore += item.baseScore;
+            }
+            // finalScoreを表示するロジックは削除し、各ボーナスと素点の合計を表示するように変更
+
+            return (
             <ScoreRow
               key={item.id}
-              item={item}
+              item={{ ...item, score: displayedScore }} // 計算されたスコアを渡す
               index={index}
               maxScore={maxScore}
               totalWidth={VIRTUAL_WIDTH}
-              startAnimation={startAnimation}
-              isWinner={maxScore > 0 && item.score === maxScore}
+              currentStep={currentStep} // startAnimationの代わりにcurrentStepを渡す
+              isWinner={maxScore > 0 && item.finalScore === maxScore} // これは純粋な最終勝者判定
+              shouldHighlight={currentStep === totalSteps && maxScore > 0 && item.finalScore === maxScore} // ハイライト条件を追加
             />
-          ))}
+          )})}
         </Layer>
       </Stage>
 
