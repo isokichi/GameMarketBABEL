@@ -11,14 +11,27 @@ function doGet(e) {
     }
 
     if (e.parameter.action === 'getChartData') {
-      const c11 = sheet.getRange('C11').getValue();
-      const d11 = sheet.getRange('D11').getValue();
-      const e11 = sheet.getRange('E11').getValue();
-      const f11 = sheet.getRange('F11').getValue();
-      // 取得した値をGASのログに出力
-      Logger.log(`[getChartData] C11: ${c11}, D11: ${d11}, E11: ${e11}, F11: ${f11}`);
-      return ContentService.createTextOutput(JSON.stringify({ c11: c11, d11: d11, e11: e11, f11: f11 }))
-                           .setMimeType(ContentService.MimeType.JSON); // setHeadersを削除
+      const range = sheet.getRange('C4:F11');
+      const values = range.getValues(); // 二次元配列として取得
+
+      // 取得した値をフラットなオブジェクトに変換
+      const chartData = {};
+      const startRow = range.getRow();
+      const startCol = range.getColumn();
+
+      for (let i = 0; i < values.length; i++) {
+        for (let j = 0; j < values[i].length; j++) {
+          const row = startRow + i;
+          const col = startCol + j;
+          const colLetter = String.fromCharCode('A'.charCodeAt(0) + col - 1); // 列番号を文字に変換
+          const cellName = `${colLetter}${row}`;
+          chartData[cellName] = values[i][j];
+        }
+      }
+
+      Logger.log(`[getChartData] Data: ${JSON.stringify(chartData)}`);
+      return ContentService.createTextOutput(JSON.stringify(chartData))
+                           .setMimeType(ContentService.MimeType.JSON);
     } else if (e.parameter.action === 'getNextBonus') {
       const b19 = sheet.getRange('B19').getValue();
       const c19 = sheet.getRange('C19').getValue();

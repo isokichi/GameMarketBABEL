@@ -5,7 +5,7 @@ import type { TeamData } from '@/App'; // TeamData型をインポート
 // GASウェブアプリのURL (fetch API用)
 // GASウェブアプリのURL (fetch API用)
 // App.tsxと統一するために変更
-const gasWebAppUrl = 'https://script.google.com/macros/s/AKfycbwt6Ga3QDhCikbJadAyKpT17HcOAgrw-eN6WyXE9dRsPWkQSP6LDdN20pHN_1xa1XjK/exec';
+const gasWebAppUrl = 'https://script.google.com/macros/s/AKfycbzDDF6g1NMXEYpOi7VsSQQNaBf_LEfW56Pu-0opeVH5H7npWi8I6BbvkgQQRV1Qn4-Srw/exec';
 
 interface ResultScreenContainerProps {
     currentScreen: 'initial' | 'media' | 'result';
@@ -45,13 +45,40 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
                         setChartData([]);
                     } else {
                         // GASからのデータをTeamData形式に変換
-                        // 現在のGraphScreenはid, label, scoreを期待する
-                        const transformedData: TeamData[] = [
-                            { id: "c11", label: "C11", score: data.c11 || 0 },
-                            { id: "d11", label: "D11", score: data.d11 || 0 },
-                            { id: "e11", label: "E11", score: data.e11 || 0 },
-                            { id: "f11", label: "F11", score: data.f11 || 0 },
-                        ];
+                        const transformedData: TeamData[] = [];
+                        const teamCols = ['C', 'D', 'E', 'F']; // チームごとの列
+
+                        // ボーナススコアの定数
+                        const SONG_BONUS_SCORE = 20;
+                        const VARIABLE_BONUS_SCORE = 10;
+                        const DANCE_BONUS_SCORE = 10;
+
+                        teamCols.forEach(col => {
+                            const baseScore = (data[`${col}4`] || 0) as number;
+                            const songBonusAchieved = (data[`${col}5`] === true); // booleanに変換
+                            const variableBonusesAchieved = [
+                                (data[`${col}6`] === true),
+                                (data[`${col}7`] === true),
+                                (data[`${col}8`] === true),
+                                (data[`${col}9`] === true),
+                            ];
+                            const danceBonusAchieved = (data[`${col}10`] === true); // booleanに変換
+                            const finalScore = (data[`${col}11`] || 0) as number;
+
+                            // 初期表示スコアは素点とする
+                            const initialScore = baseScore;
+
+                            transformedData.push({
+                                id: col,
+                                label: `チーム ${col}`,
+                                score: initialScore, // 初期スコア
+                                baseScore: baseScore,
+                                songBonusAchieved: songBonusAchieved,
+                                variableBonusesAchieved: variableBonusesAchieved,
+                                danceBonusAchieved: danceBonusAchieved,
+                                finalScore: finalScore,
+                            });
+                        });
                         setChartData(transformedData);
                     }
                 })

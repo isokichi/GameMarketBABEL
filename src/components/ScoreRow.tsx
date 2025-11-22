@@ -19,9 +19,10 @@ const ScoreRow: React.FC<{
   index: number;
   maxScore: number;
   totalWidth: number;
-  startAnimation: boolean;
+  currentStep: number;
   isWinner: boolean;
-}> = ({ item, index, maxScore, totalWidth, startAnimation, isWinner }) => {
+  shouldHighlight: boolean; // 新しく追加
+}> = ({ item, index, maxScore, totalWidth, currentStep, isWinner, shouldHighlight }) => { // shouldHighlightを受け取る
   const barRef = useRef<Konva.Rect>(null);
   const textRef = useRef<Konva.Text>(null);
   const [animationFinished, setAnimationFinished] = useState(false);
@@ -39,40 +40,38 @@ const ScoreRow: React.FC<{
     const textNode = textRef.current;
 
     if (barNode && textNode) {
-      if (startAnimation) {
+      setAnimationFinished(false); // 各ステップのアニメーション開始前にリセット
+
+      // currentStepが0でない場合にアニメーションを開始
+      if (currentStep > 0) {
         // --- アニメーション開始 ---
         barNode.to({
           width: targetBarWidth,
-          duration: 2,
+          duration: 1.5, // アニメーション速度を1.5秒に調整
           easing: Konva.Easings.StrongEaseInOut,
-          // 【修正】setTimeoutを使ってState更新を非同期にし、エラーを回避
           onFinish: () => {
-            setTimeout(() => {
-              setAnimationFinished(true);
-            }, 0);
+            setAnimationFinished(true);
           },
         });
 
         textNode.to({
           x: targetTextX,
           opacity: 1,
-          duration: 2,
+          duration: 1.5, // アニメーション速度を1.5秒に調整
           easing: Konva.Easings.StrongEaseInOut,
         });
       } else {
-        // --- リセット ---
-        barNode.width(0);
-        textNode.opacity(0);
+        // --- リセット（currentStep === 0の場合）---
+        barNode.width(0); // 初期状態ではバーを非表示
+        textNode.opacity(0); // テキストも非表示
         textNode.x(barStartX + 15);
-        setTimeout(() => {
-          setAnimationFinished(false);
-        }, 0);
+        // setAnimationFinished(false) はuseEffect冒頭で既に実行されているため、ここでは不要
       }
     }
-  }, [targetBarWidth, targetTextX, startAnimation]);
+  }, [targetBarWidth, targetTextX, currentStep, barStartX]); // barStartXも依存配列に追加
 
-  // アニメーション完了かつ優勝チームの場合に強調
-  const isHighlighted = isWinner && animationFinished;
+  // ハイライト条件をshouldHighlightとアニメーション完了に依存させる
+  const isHighlighted = shouldHighlight && animationFinished;
 
   return (
     <Group y={yPos}>
