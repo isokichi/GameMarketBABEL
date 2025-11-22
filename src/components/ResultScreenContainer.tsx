@@ -23,7 +23,7 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
     useEffect(() => {
         if (currentScreen === 'result') {
             // 結果画面BGMの再生はApp.tsxとMediaPlayerで制御するため、ここでは行わない
-            onBgmPlayToggle(false); // メインBGMを一時停止
+            // onBgmPlayToggle(false); // メインBGMを一時停止 (resultBGMを継続するためコメントアウト)
 
             setLoading(true);
             setError(null);
@@ -35,7 +35,6 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
                     return response.json();
                 })
                 .then(data => {
-                    console.log("GASからのチャートデータレスポンス:", data); // 追加
                     if (data.error) {
                         console.error(`チャートデータの読み込みに失敗しました: ${data.error}`);
                         setError(`データの読み込みに失敗しました: ${data.error}`);
