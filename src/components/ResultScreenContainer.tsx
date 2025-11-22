@@ -18,15 +18,11 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
     const [loading, setLoading] = useState(true);
     const [chartData, setChartData] = useState<TeamData[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const resultBgmPlayerRef = useRef<HTMLAudioElement>(null); // resultBGMの参照
+    const resultBgmPlayerRef = useRef<HTMLAudioElement>(null); // resultBGMの参照 (今回は使用しないが、参照だけ残しておく)
 
     useEffect(() => {
         if (currentScreen === 'result') {
-            // 結果画面BGMの再生
-            if (resultBgmPlayerRef.current) {
-                resultBgmPlayerRef.current.currentTime = 0; // 最初から再生
-                resultBgmPlayerRef.current.play().catch((e: unknown) => console.error("結果BGMの再生に失敗しました:", e));
-            }
+            // 結果画面BGMの再生はApp.tsxとMediaPlayerで制御するため、ここでは行わない
             onBgmPlayToggle(false); // メインBGMを一時停止
 
             setLoading(true);
@@ -116,14 +112,11 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
 
     return (
         <div id="result-screen" className="result-screen" style={{ display: 'flex' }}>
-            {/* resultBGMプレイヤーを追加 */}
-            <audio ref={resultBgmPlayerRef} src="/audio/resultBGM.mp3" loop></audio> {/* 追記 */}
             {loading && <div id="loading-message" className="loading-message">集計中...</div>}
             {error && !loading && <div className="error-message" style={{ color: 'red', fontSize: '1.5em' }}>{error}</div>}
             {!loading && !error && chartData.length > 0 && (
                 <GraphScreen data={chartData} />
             )}
-            {/* エラーがなくデータもない場合、データなしメッセージなどを表示することも可能 */}
             {!loading && !error && chartData.length === 0 && (
                 <div className="no-data-message" style={{ color: 'gray', fontSize: '1.5em' }}>表示するデータがありません。</div>
             )}

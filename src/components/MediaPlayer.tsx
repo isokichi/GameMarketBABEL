@@ -73,14 +73,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, 
         setCurrentVideoKey(null); // 現在の動画キーをクリア
         // lastPlayedVideoKey は保持されたまま待機画面を表示
         setShowWaitingScreen(true); // 動画終了後、待機画面を表示
-        // App.tsxでcurrentBgmSourceが設定され、isBgmPlayingがtrueになるのを待つ
-        // その代わりに、ここで直接BGMを切り替えて再生する
-        if (bgmPlayerRef.current) {
-            bgmPlayerRef.current.src = '/audio/resultBGM.mp3'; // 結果発表BGMに直接設定
-            bgmPlayerRef.current.currentTime = 0;
-            bgmPlayerRef.current.play().catch((e: unknown) => console.error("結果BGMの再生に失敗しました:", e));
-        }
-    }, []); // 依存配列からonBgmPlayToggleを削除
+        onBgmPlayToggle(true); // App.tsxを通じてBGMを再開 (App.tsxで設定されたcurrentBgmSourceが再生される)
+    }, [onBgmPlayToggle]); // 依存配列にonBgmPlayToggleを追加
 
     useEffect(() => {
         if (videoPlayerRef.current) {
