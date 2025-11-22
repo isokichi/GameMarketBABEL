@@ -113,6 +113,7 @@ const App: React.FC = () => {
           if (prevScreen === 'result') {
             handleBgmPlayToggle(true); // 結果画面を閉じたらBGM再開
             setVideoKeyToLoad(null); // 結果画面を閉じたらキーをリセット
+            setCurrentBgmSource('/audio/BGM.wav'); // initial画面に戻るため、BGMソースをメインBGMに設定
             return 'initial';
           } else {
             // handleBgmPlayToggle(false); // 結果画面を開いたらBGM一時停止 - lキー押下時もBGMを継続するためコメントアウト
