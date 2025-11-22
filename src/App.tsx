@@ -69,8 +69,8 @@ const App: React.FC = () => {
     // setCurrentScreen('initial'); // MediaPlayer内で待機画面に遷移させるため、App.tsxでは画面遷移を行わない
     setVideoKeyToLoad(null); // 動画終了でキーをリセット
     setCurrentBgmSource('/audio/resultBGM.mp3'); // 動画終了で結果発表BGMに切り替え
-    setIsBgmPlaying(true); // 動画終了と同時に結果発表BGMを再生開始
-  }, [setCurrentBgmSource, setIsBgmPlaying]); // 依存配列にsetIsBgmPlayingを追加
+    // setIsBgmPlaying(true); // BGM再生はAppのuseEffectで制御する
+  }, [setCurrentBgmSource]); // 依存配列からsetIsBgmPlayingを削除
 
   // GAS連携とボーナスデータ設定、Media画面への遷移を行う関数
   const fetchBonusAndTransitionToMedia = useCallback(async (key: string) => { // キーを受け取る
