@@ -75,6 +75,7 @@ const App: React.FC = () => {
   // GAS連携とボーナスデータ設定、Media画面への遷移を行う関数
   const fetchBonusAndTransitionToMedia = useCallback(async (key: string) => { // キーを受け取る
     console.log(`App.tsx: ボーナス取得を開始します。`);
+    setCurrentBgmSource('/audio/BGM.wav'); // 動画開始前（待機画面）はメインBGM
     // handleBgmPlayToggle(false); // Media画面に入る前にメインBGMを停止 (ボーナス読み込み中はBGMを止めない)
     try {
       const response = await fetch(`${GAS_URL}?action=getNextBonus`);
@@ -94,9 +95,10 @@ const App: React.FC = () => {
       console.error("App.tsx: GASからのデータ取得中にエラーが発生しました:", error);
       setCurrentScreen('initial'); // エラー時はinitialに戻る
       setVideoKeyToLoad(null); // エラー時はキーをリセット
+      setCurrentBgmSource('/audio/BGM.wav'); // エラー時はinitialに戻るのでメインBGMに戻す
       handleBgmPlayToggle(true); // エラー時はinitialに戻るのでBGMを再開
     }
-  }, [handleBgmPlayToggle, setBonusNumbers, setCurrentScreen, setVideoKeyToLoad]); // 依存配列にsetVideoKeyToLoadを追加
+  }, [handleBgmPlayToggle, setBonusNumbers, setCurrentScreen, setVideoKeyToLoad, setCurrentBgmSource]); // 依存配列にsetCurrentBgmSourceを追加
 
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
@@ -132,21 +134,28 @@ const App: React.FC = () => {
     };
   }, [handleBgmPlayToggle, isInitialBgmPlayed, currentScreen, fetchBonusAndTransitionToMedia, setVideoKeyToLoad]); // 依存配列にsetVideoKeyToLoadを追加
 
-  // BGMソースが変更されたときにBGMの再生状態を同期する
+  // BGMソースと画面の状態に基づいてBGMの再生を制御する
   useEffect(() => {
-    // Media画面で結果BGMが設定された場合、BGMを再生する
-    if (currentScreen === 'media' && currentBgmSource === '/audio/resultBGM.mp3') {
-      setIsBgmPlaying(true);
-    } 
-    // Initial画面でメインBGMが設定され、かつ一度でもBGMが再生されたことがある場合
-    else if (currentScreen === 'initial' && currentBgmSource === '/audio/BGM.wav' && isInitialBgmPlayed) {
-      setIsBgmPlaying(true);
-    }
-    // その他の場合はBGMを停止
-    else {
+    if (currentScreen === 'initial') {
+      // メイン画面に来たらメインBGMを再生
+      setCurrentBgmSource('/audio/BGM.wav');
+      // 初回操作後の場合のみBGMを再生
+      setIsBgmPlaying(isInitialBgmPlayed);
+    } else if (currentScreen === 'media') {
+      // 動画開始前の待機画面 (videoKeyToLoadが存在する)
+      if (videoKeyToLoad !== null) {
+        setCurrentBgmSource('/audio/BGM.wav'); // メインBGM
+        setIsBgmPlaying(true);
+      } else {
+        // 動画終了後の待機画面 (videoKeyToLoadがnull)
+        setCurrentBgmSource('/audio/resultBGM.mp3'); // 結果発表BGM
+        setIsBgmPlaying(true);
+      }
+    } else if (currentScreen === 'result') {
+      // 結果発表画面ではBGMを停止（ResultScreenContainerが自身のBGMを管理）
       setIsBgmPlaying(false);
     }
-  }, [currentScreen, currentBgmSource, isInitialBgmPlayed]);
+  }, [currentScreen, isInitialBgmPlayed, videoKeyToLoad, setCurrentBgmSource, setIsBgmPlaying]); // 依存配列を調整
 
 
   return (
