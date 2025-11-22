@@ -68,9 +68,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, 
     const handleVideoEnded = useCallback(() => {
         setIsVideoPlaying(false);
         setCurrentVideoKey(null);
-        onVideoEnded(); // 親コンポーネントに通知
+        setShowWaitingScreen(true); // 動画終了後、待機画面を表示
+        // onVideoEnded(); // 親コンポーネントへの通知は行わず、このコンポーネント内で待機画面に遷移する
         onBgmPlayToggle(true); // 動画終了でBGM再開
-    }, [onVideoEnded, onBgmPlayToggle]);
+    }, [onBgmPlayToggle]);
 
     useEffect(() => {
         if (videoPlayerRef.current) {

@@ -51,9 +51,9 @@ const App: React.FC = () => {
     setIsBgmPlaying(play);
   }, []);
 
-  // 動画終了時に初期画面に戻るコールバック
+  // 動画終了時に待機画面に戻るコールバック（MediaPlayer内で完結させるため、App.tsxでは画面遷移は行わない）
   const handleVideoEnded = useCallback(() => {
-    setCurrentScreen('initial');
+    // setCurrentScreen('initial'); // MediaPlayer内で待機画面に遷移させるため、App.tsxでは画面遷移を行わない
     setVideoKeyToLoad(null); // 動画終了でキーをリセット
     handleBgmPlayToggle(true); // 動画終了でBGM再開
   }, [handleBgmPlayToggle]);
