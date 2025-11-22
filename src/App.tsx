@@ -57,22 +57,24 @@ const App: React.FC = () => {
   const [bonusNumbers, setBonusNumbers] = useState<number[]>([]); // ボーナスカードの数字を保持するステート
   const [isInitialBgmPlayed, setIsInitialBgmPlayed] = useState(false); // App.tsxで管理
   const [videoKeyToLoad, setVideoKeyToLoad] = useState<string | null>(null); // MediaPlayerに渡す動画キー
+  const [currentBgmSource, setCurrentBgmSource] = useState<string>('/audio/BGM.wav'); // 現在再生中のBGMソース
 
   // BGMの再生/一時停止を切り替えるコールバック
   const handleBgmPlayToggle = useCallback((play: boolean) => {
     setIsBgmPlaying(play);
   }, []);
 
-  // 動画終了時に初期画面に戻るコールバック
+  // 動画終了時に待機画面に戻るコールバック（MediaPlayer内で完結させるため、App.tsxでは画面遷移は行わない）
   const handleVideoEnded = useCallback(() => {
-    setCurrentScreen('initial');
+    // setCurrentScreen('initial'); // MediaPlayer内で待機画面に遷移させるため、App.tsxでは画面遷移を行わない
     setVideoKeyToLoad(null); // 動画終了でキーをリセット
-    handleBgmPlayToggle(true); // 動画終了でBGM再開
-  }, [handleBgmPlayToggle]);
+    setCurrentBgmSource('/audio/resultBGM.mp3'); // 動画終了で結果発表BGMに切り替え
+    // setIsBgmPlaying(true); // BGM再生はAppのuseEffectで制御する
+  }, []); // 依存配列を空にする (setState関数は安定した参照を持つため)
 
   // GAS連携とボーナスデータ設定、Media画面への遷移を行う関数
   const fetchBonusAndTransitionToMedia = useCallback(async (key: string) => { // キーを受け取る
-    console.log(`App.tsx: ボーナス取得を開始します。`);
+    setCurrentBgmSource('/audio/BGM.wav'); // 動画開始前（待機画面）はメインBGM
     // handleBgmPlayToggle(false); // Media画面に入る前にメインBGMを停止 (ボーナス読み込み中はBGMを止めない)
     try {
       const response = await fetch(`${GAS_URL}?action=getNextBonus`);
@@ -82,7 +84,6 @@ const App: React.FC = () => {
         console.error("GASからのエラー:", data.error);
         throw new Error(data.error);
       } else {
-        console.log("App.tsx: GASから取得したボーナスデータ:", data);
         const { b19, c19, d19, e19 } = data;
         setBonusNumbers([b19, c19, d19, e19]);
         setVideoKeyToLoad(key); // 押されたキーを保存
@@ -92,9 +93,10 @@ const App: React.FC = () => {
       console.error("App.tsx: GASからのデータ取得中にエラーが発生しました:", error);
       setCurrentScreen('initial'); // エラー時はinitialに戻る
       setVideoKeyToLoad(null); // エラー時はキーをリセット
+      setCurrentBgmSource('/audio/BGM.wav'); // エラー時はinitialに戻るのでメインBGMに戻す
       handleBgmPlayToggle(true); // エラー時はinitialに戻るのでBGMを再開
     }
-  }, [handleBgmPlayToggle, setBonusNumbers, setCurrentScreen, setVideoKeyToLoad]); // 依存配列にsetVideoKeyToLoadを追加
+  }, [handleBgmPlayToggle, setBonusNumbers, setCurrentScreen, setVideoKeyToLoad, setCurrentBgmSource]); // 依存配列にsetCurrentBgmSourceを追加
 
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
@@ -104,7 +106,6 @@ const App: React.FC = () => {
       if (!isInitialBgmPlayed) {
         handleBgmPlayToggle(true);
         setIsInitialBgmPlayed(true);
-        console.log("App.tsx: 最初のユーザー操作でBGMを再生しました。");
       }
 
       if (key === 'l') {
@@ -112,9 +113,10 @@ const App: React.FC = () => {
           if (prevScreen === 'result') {
             handleBgmPlayToggle(true); // 結果画面を閉じたらBGM再開
             setVideoKeyToLoad(null); // 結果画面を閉じたらキーをリセット
+            setCurrentBgmSource('/audio/BGM.wav'); // initial画面に戻るため、BGMソースをメインBGMに設定
             return 'initial';
           } else {
-            handleBgmPlayToggle(false); // 結果画面を開いたらBGM一時停止
+            // handleBgmPlayToggle(false); // 結果画面を開いたらBGM一時停止 - lキー押下時もBGMを継続するためコメントアウト
             return 'result';
           }
         });
@@ -130,6 +132,30 @@ const App: React.FC = () => {
     };
   }, [handleBgmPlayToggle, isInitialBgmPlayed, currentScreen, fetchBonusAndTransitionToMedia, setVideoKeyToLoad]); // 依存配列にsetVideoKeyToLoadを追加
 
+  // BGMソースと画面の状態に基づいてBGMの再生を制御する
+  useEffect(() => {
+    let shouldPlayBgm = false;
+    if (currentScreen === 'initial') {
+      // Initial画面で、かつBGMソースがメインBGMで、かつ初回操作後の場合のみBGMを再生
+      shouldPlayBgm = currentBgmSource === '/audio/BGM.wav' && isInitialBgmPlayed;
+    } else if (currentScreen === 'media') {
+      // Media画面（待機中または動画終了後）
+      // videoKeyToLoadが存在する場合（動画開始前の待機画面）はメインBGMを再生
+      // videoKeyToLoadがnullの場合（動画終了後の待機画面）は結果発表BGMを再生
+      shouldPlayBgm = (videoKeyToLoad !== null && currentBgmSource === '/audio/BGM.wav') ||
+                      (videoKeyToLoad === null && currentBgmSource === '/audio/resultBGM.mp3');
+    } else if (currentScreen === 'result') {
+      // 結果発表画面ではBGMを停止（ResultScreenContainerが自身のBGMを管理）
+      // しかし、ユーザーの要望によりresultBGM.mp3は継続再生
+      shouldPlayBgm = currentBgmSource === '/audio/resultBGM.mp3';
+    } else {
+      // その他の場合はBGMを停止
+      shouldPlayBgm = false;
+    }
+    setIsBgmPlaying(shouldPlayBgm);
+  }, [currentScreen, currentBgmSource, isInitialBgmPlayed, videoKeyToLoad]); // 依存配列を調整 (setCurrentBgmSourceは削除)
+
+
   return (
     <>
       <InitialScreen 
@@ -144,11 +170,15 @@ const App: React.FC = () => {
         bonusNumbers={bonusNumbers} // bonusNumbersをMediaPlayerに渡す
         setBonusNumbers={setBonusNumbers} // setBonusNumbersもMediaPlayerに渡す
         initialVideoKey={videoKeyToLoad} // MediaPlayerに動画キーを渡す
+        currentBgmSource={currentBgmSource} // MediaPlayerにBGMソースを渡す
       />
       <ResultScreenContainer
         currentScreen={currentScreen}
         onBackToInitial={() => setCurrentScreen('initial')} // 結果画面から戻る機能が必要な場合
         onBgmPlayToggle={handleBgmPlayToggle}
+        // ResultScreenContainerからinitialに戻る際にBGMをメインに戻す
+        // ユーザーの要望により、result画面からinitialに戻る際もBGMをリセットしない
+        onResultScreenClosed={() => { /* setCurrentBgmSource('/audio/BGM.wav') */ }}
       />
     </>
   );

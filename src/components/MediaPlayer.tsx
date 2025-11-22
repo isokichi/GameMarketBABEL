@@ -42,12 +42,14 @@ interface MediaPlayerProps {
     bonusNumbers: number[]; // App.tsxから受け取るボーナス数字
     setBonusNumbers: Dispatch<SetStateAction<number[]>>; // App.tsxから受け取るsetBonusNumbers
     initialVideoKey: string | null; // App.tsxから受け取る初期動画キー
+    currentBgmSource: string; // App.tsxから受け取る現在のBGMソース
 }
 
-const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, isBgmPlaying, onBgmPlayToggle, bonusNumbers, setBonusNumbers, initialVideoKey }) => {
+const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, isBgmPlaying, onBgmPlayToggle, bonusNumbers, setBonusNumbers, initialVideoKey, currentBgmSource }) => {
     const videoPlayerRef = useRef<HTMLVideoElement>(null);
     const bgmPlayerRef = useRef<HTMLAudioElement>(null);
     const [currentVideoKey, setCurrentVideoKey] = useState<string | null>(initialVideoKey); // 初期値をinitialVideoKeyにする
+    const [lastPlayedVideoKey, setLastPlayedVideoKey] = useState<string | null>(initialVideoKey); // 最後に再生された動画キーを保持
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
     const [showWaitingScreen, setShowWaitingScreen] = useState(false);
     const [showPausedMessage, setShowPausedMessage] = useState(false); // 一時停止メッセージ表示ステート
@@ -55,6 +57,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, 
     // BGM再生/一時停止のロジック
     useEffect(() => {
         if (bgmPlayerRef.current) {
+            bgmPlayerRef.current.src = currentBgmSource; // BGMソースを更新
             if (isBgmPlaying) {
                 bgmPlayerRef.current.currentTime = 0; // 最初から再生
                 bgmPlayerRef.current.play().catch((e: unknown) => console.error("BGMの再生に失敗しました:", e));
@@ -62,15 +65,17 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, 
                 bgmPlayerRef.current.pause();
             }
         }
-    }, [isBgmPlaying]);
+    }, [isBgmPlaying, currentBgmSource]); // isBgmPlayingとcurrentBgmSourceを監視
 
     // 動画再生終了時の処理
     const handleVideoEnded = useCallback(() => {
         setIsVideoPlaying(false);
-        setCurrentVideoKey(null);
-        onVideoEnded(); // 親コンポーネントに通知
-        onBgmPlayToggle(true); // 動画終了でBGM再開
-    }, [onVideoEnded, onBgmPlayToggle]);
+        setCurrentVideoKey(null); // 現在の動画キーをクリア
+        // lastPlayedVideoKey は保持されたまま待機画面を表示
+        setShowWaitingScreen(true); // 動画終了後、待機画面を表示
+        onVideoEnded(); // App.tsxを通じて動画終了を通知
+        onBgmPlayToggle(true); // App.tsxを通じてBGMを再開 (App.tsxで設定されたcurrentBgmSourceが再生される)
+    }, [onBgmPlayToggle, onVideoEnded]); // 依存配列にonVideoEndedを追加
 
     useEffect(() => {
         if (videoPlayerRef.current) {
@@ -87,10 +92,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, 
             if (videoPlayerRef.current) {
                 videoPlayerRef.current.src = videoSources[initialVideoKey];
                 setCurrentVideoKey(initialVideoKey);
+                setLastPlayedVideoKey(initialVideoKey); // 最後に再生された動画キーを更新
                 setShowWaitingScreen(true); // 待機画面を表示
                 setIsVideoPlaying(false); // 動画はまだ再生されていない
                 setShowPausedMessage(false); // ロード時は一時停止メッセージを非表示
-                // onBgmPlayToggle(false); // App.tsxでBGMを停止しているため不要
                 console.log(`MediaPlayer: initialVideoKeyで動画をロード: ${videoSources[initialVideoKey]}。待機画面を表示中。スペースキーで再生/停止。`);
             }
         } else if (currentScreen !== 'media' && initialVideoKey === null) {
@@ -160,13 +165,13 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, 
 
     return (
         <div id="media-container" style={{ display: currentScreen === 'media' ? 'flex' : 'none' }}>
-            <video id="videoPlayer" ref={videoPlayerRef} controls={false} style={{ display: (isVideoPlaying || showWaitingScreen) ? 'block' : 'none' }}></video>
-            <audio id="bgmPlayer" ref={bgmPlayerRef} src="/audio/BGM.wav" loop></audio>
+            <video id="videoPlayer" ref={videoPlayerRef} controls={false} style={{ display: isVideoPlaying ? 'block' : 'none' }}></video> {/* 動画再生中のみ表示 */}
+            <audio id="bgmPlayer" ref={bgmPlayerRef} src={currentBgmSource} loop></audio> {/* BGMソースをcurrentBgmSourceにする */}
 
             {/* 各動画の待機画面 */}
-            {currentVideoKey && showWaitingScreen && waitingImageSources[currentVideoKey] && (
-                <div id={`waiting-screen-${currentVideoKey}`} className="waiting-screen" style={{ position: 'relative', width: '100%', height: '100%' }}>
-                    <img src={waitingImageSources[currentVideoKey]} alt={`Waiting Screen ${currentVideoKey}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            {showWaitingScreen && lastPlayedVideoKey && waitingImageSources[lastPlayedVideoKey] && (
+                <div id={`waiting-screen-${lastPlayedVideoKey}`} className="waiting-screen" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <img src={waitingImageSources[lastPlayedVideoKey]} alt={`Waiting Screen ${lastPlayedVideoKey}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     
                     {/* ボーナスカードの表示 */}
                     {bonusNumbers.length > 0 && bonusNumbers.map((num, index) => {
