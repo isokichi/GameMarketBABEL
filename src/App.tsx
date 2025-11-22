@@ -57,6 +57,7 @@ const App: React.FC = () => {
   const [bonusNumbers, setBonusNumbers] = useState<number[]>([]); // ボーナスカードの数字を保持するステート
   const [isInitialBgmPlayed, setIsInitialBgmPlayed] = useState(false); // App.tsxで管理
   const [videoKeyToLoad, setVideoKeyToLoad] = useState<string | null>(null); // MediaPlayerに渡す動画キー
+  const [currentBgmSource, setCurrentBgmSource] = useState<string>('/audio/BGM.wav'); // 現在再生中のBGMソース
 
   // BGMの再生/一時停止を切り替えるコールバック
   const handleBgmPlayToggle = useCallback((play: boolean) => {
@@ -67,8 +68,9 @@ const App: React.FC = () => {
   const handleVideoEnded = useCallback(() => {
     // setCurrentScreen('initial'); // MediaPlayer内で待機画面に遷移させるため、App.tsxでは画面遷移を行わない
     setVideoKeyToLoad(null); // 動画終了でキーをリセット
-    handleBgmPlayToggle(true); // 動画終了でBGM再開
-  }, [handleBgmPlayToggle]);
+    setCurrentBgmSource('/audio/resultBGM.mp3'); // 動画終了で結果発表BGMに切り替え
+    handleBgmPlayToggle(true); // BGM再開 (結果発表BGMが再生される)
+  }, [handleBgmPlayToggle, setCurrentBgmSource]); // 依存配列にsetCurrentBgmSourceを追加
 
   // GAS連携とボーナスデータ設定、Media画面への遷移を行う関数
   const fetchBonusAndTransitionToMedia = useCallback(async (key: string) => { // キーを受け取る
@@ -144,11 +146,14 @@ const App: React.FC = () => {
         bonusNumbers={bonusNumbers} // bonusNumbersをMediaPlayerに渡す
         setBonusNumbers={setBonusNumbers} // setBonusNumbersもMediaPlayerに渡す
         initialVideoKey={videoKeyToLoad} // MediaPlayerに動画キーを渡す
+        currentBgmSource={currentBgmSource} // MediaPlayerにBGMソースを渡す
       />
       <ResultScreenContainer
         currentScreen={currentScreen}
         onBackToInitial={() => setCurrentScreen('initial')} // 結果画面から戻る機能が必要な場合
         onBgmPlayToggle={handleBgmPlayToggle}
+        // ResultScreenContainerからinitialに戻る際にBGMをメインに戻す
+        onResultScreenClosed={() => setCurrentBgmSource('/audio/BGM.wav')}
       />
     </>
   );

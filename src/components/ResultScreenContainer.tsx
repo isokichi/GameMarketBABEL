@@ -11,9 +11,10 @@ interface ResultScreenContainerProps {
     currentScreen: 'initial' | 'media' | 'result';
     onBackToInitial: () => void;
     onBgmPlayToggle: (play: boolean) => void; // 新しく追加
+    onResultScreenClosed: () => void; // 結果画面が閉じられたときに呼び出される
 }
 
-const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentScreen, onBgmPlayToggle }) => { // onBgmPlayToggleを受け取る
+const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentScreen, onBackToInitial, onBgmPlayToggle, onResultScreenClosed }) => {
     const [loading, setLoading] = useState(true);
     const [chartData, setChartData] = useState<TeamData[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -104,8 +105,10 @@ const ResultScreenContainer: React.FC<ResultScreenContainerProps> = ({ currentSc
                 resultBgmPlayerRef.current.pause();
                 resultBgmPlayerRef.current.currentTime = 0;
             }
+            // 結果画面が閉じられるときにonResultScreenClosedを呼び出す
+            onResultScreenClosed();
         };
-    }, [currentScreen, onBgmPlayToggle]); // onBgmPlayToggleを依存配列に追加
+    }, [currentScreen, onBgmPlayToggle, onResultScreenClosed]); // onBgmPlayToggleとonResultScreenClosedを依存配列に追加
 
     if (currentScreen !== 'result') {
         return null; // 結果画面ではない場合は何も表示しない
