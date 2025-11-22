@@ -73,8 +73,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ onVideoEnded, currentScreen, 
         setCurrentVideoKey(null); // 現在の動画キーをクリア
         // lastPlayedVideoKey は保持されたまま待機画面を表示
         setShowWaitingScreen(true); // 動画終了後、待機画面を表示
-        // onBgmPlayToggle(true); // BGM再開はApp.tsxのuseEffectで制御する
-    }, []); // 依存配列からonBgmPlayToggleを削除
+        onBgmPlayToggle(true); // 動画終了と同時にBGMを再開 (App.tsxで設定されたcurrentBgmSourceが再生される)
+    }, [onBgmPlayToggle]); // 依存配列にonBgmPlayToggleを追加
 
     useEffect(() => {
         if (videoPlayerRef.current) {
